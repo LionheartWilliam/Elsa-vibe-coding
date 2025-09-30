@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Symptoms Matching Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --card-size: 140px;
+            --card-gap: 15px;
+            --main-bg-color: #f0f8ff;
+            --card-back-color: #4a90e2;
+            --card-front-color: #ffffff;
+            --text-color: #333;
+            --border-radius: 10px;
+            --box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--main-bg-color);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        h1 {
+            font-family: 'Fredoka One', cursive;
+            color: #3d5a80;
+            font-size: 2.5em;
+            margin-bottom: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .info-panel {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            max-width: calc(var(--card-size) * 4 + var(--card-gap) * 3);
+            background: var(--card-front-color);
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        #current-score {
+            color: #ff6b6b;
+        }
+        #total-score {
+            color: #3d5a80;
+            font-size: 0.9em;
+        }
+        #timer {
+             color: var(--card-back-color);
+        }
+        .memory-game {
+            width: calc(var(--card-size) * 4 + var(--card-gap) * 3);
+            height: calc(var(--card-size) * 4 + var(--card-gap) * 3);
+            display: grid;
+            grid-template-columns: repeat(4, var(--card-size));
+            grid-template-rows: repeat(4, var(--card-size));
+            gap: var(--card-gap);
+            perspective: 1000px;
+        }
+        .memory-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            box-shadow: var(--box-shadow);
+            border-radius: var(--border-radius);
+        }
+        .memory-card.flip {
+            transform: rotateY(180deg);
+        }
+        .memory-card.matched {
+            box-shadow: 0 0 15px 5px #4CAF50;
+            cursor: default;
+        }
+        .front-face,
+        .back-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: var(--border-radius);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 1.4em; /* Slightly larger font for single words */
+            line-height: 1.4;
+        }
+        .front-face {
+            background-color: var(--card-front-color);
+            color: var(--text-color);
+            transform: rotateY(180deg);
+        }
+        .back-face {
+            background-color: var(--card-back-color);
+        }
+        #restart-btn {
+            padding: 12px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #fff;
+            background-color: #ff6b6b;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-shadow: var(--box-shadow);
+        }
+        #restart-btn:hover {
+            background-color: #ff4757;
+        }
+        @media (max-width: 680px) {
+            h1 { font-size: 2em; }
+            :root { --card-size: 80px; --card-gap: 10px; }
+            .info-panel, #restart-btn { font-size: 1em; }
+            .front-face { font-size: 1.2em; }
+        }
+        @media (max-width: 400px) {
+            h1 { font-size: 1.5em; }
+            :root { --card-size: 65px; }
+            .front-face { font-size: 1em; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Health Symptoms Matching Game</h1>
+        <div class="info-panel">
+            <div>Score: 
+                <span id="current-score">0</span><span id="total-score">/8</span>
+            </div>
+            <div>Time: <span id="timer">0s</span></div>
+        </div>
+        <div class="memory-game" id="game-board"></div>
+        <button id="restart-btn">Restart Game</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        // --- MODIFICATION 1: Card content changed to words ---
+        const cardData = [
+            { id: 1, type: 'en', content: 'fever' },       { id: 1, type: 'cn', content: '發燒' },
+            { id: 2, type: 'en', content: 'cold' },        { id: 2, type: 'cn', content: '感冒' },
+            { id: 3, type: 'en', content: 'runny nose' },  { id: 3, type: 'cn', content: '流鼻水' },
+            { id: 4, type: 'en', content: 'sore throat' }, { id: 4, type: 'cn', content: '喉嚨痛' },
+            { id: 5, type: 'en', content: 'cough' },       { id: 5, type: 'cn', content: '咳嗽' },
+            { id: 6, type: 'en', content: 'toothache' },   { id: 6, type: 'cn', content: '牙痛' },
+            { id: 7, type: 'en', content: 'stomachache' }, { id: 7, type: 'cn', content: '肚子痛' },
+            { id: 8, type: 'en', content: 'headache' },    { id: 8, type: 'cn', content: '頭痛' }
+        ];
+
+        const gameBoard = document.getElementById('game-board');
+        const currentScoreElement = document.getElementById('current-score');
+        const totalScoreElement = document.getElementById('total-score');
+        const timerElement = document.getElementById('timer');
+        const restartBtn = document.getElementById('restart-btn');
+
+        let hasFlippedCard = false;
+        let lockBoard = false;
+        let firstCard, secondCard;
+        let matchedPairs = 0;
+        let timer;
+        let seconds = 0;
+
+        const successSound = new Audio('https://actions.google.com/sounds/v1/human_voices/kids_saying_yay.ogg');
+        const failSound = new Audio('https://actions.google.com/sounds/v1/prompts/try_again_times_up.ogg');
+        const synth = window.speechSynthesis;
+        let voices = [];
+
+        function populateVoiceList() { voices = synth.getVoices(); }
+        populateVoiceList();
+        if (synth.onvoiceschanged !== undefined) { synth.onvoiceschanged = populateVoiceList; }
+
+        function speak(text) {
+            if (synth.speaking) { synth.cancel(); }
+            const utterThis = new SpeechSynthesisUtterance(text);
+            const priorityKeywords = ['Natural', 'Google US English', 'David', 'Zira', 'Siri', 'Alex'];
+            const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
+            let bestVoice = null;
+            for (const keyword of priorityKeywords) {
+                const foundVoice = englishVoices.find(voice => voice.name.includes(keyword));
+                if (foundVoice) { bestVoice = foundVoice; break; }
+            }
+            if (!bestVoice) bestVoice = englishVoices.find(voice => voice.lang === 'en-US');
+            if (!bestVoice && englishVoices.length > 0) bestVoice = englishVoices[0];
+            if (bestVoice) utterThis.voice = bestVoice;
+            utterThis.pitch = 1;
+
+            // --- MODIFICATION 2: Speech rate changed to 0.7 ---
+            utterThis.rate = 0.7;
+
+            // --- MODIFICATION 3: Speak twice logic is restored ---
+            utterThis.onend = function() { utterThis.onend = null; synth.speak(utterThis); };
+            
+            synth.speak(utterThis);
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        function createBoard() {
+            gameBoard.innerHTML = '';
+            shuffle(cardData);
+            cardData.forEach(item => {
+                const card = document.createElement('div');
+                card.classList.add('memory-card');
+                card.dataset.pairId = item.id;
+                card.dataset.type = item.type;
+                card.innerHTML = `<div class="front-face">${item.content}</div><div class="back-face"></div>`;
+                card.addEventListener('click', flipCard);
+                gameBoard.appendChild(card);
+            });
+        }
+
+        function startTimer() {
+            seconds = 0;
+            timerElement.textContent = '0s';
+            clearInterval(timer);
+            timer = setInterval(() => {
+                seconds++;
+                timerElement.textContent = `${seconds}s`;
+            }, 1000);
+        }
+
+        function flipCard() {
+            if (lockBoard || this === firstCard) return;
+            this.classList.add('flip');
+            if (this.dataset.type === 'en') {
+                speak(this.querySelector('.front-face').textContent);
+            }
+            if (!hasFlippedCard) {
+                hasFlippedCard = true;
+                firstCard = this;
+                return;
+            }
+            secondCard = this;
+            checkForMatch();
+        }
+
+        function checkForMatch() {
+            let isMatch = firstCard.dataset.pairId === secondCard.dataset.pairId;
+            isMatch ? disableCards() : unflipCards();
+        }
+
+        function disableCards() {
+            lockBoard = true;
+            setTimeout(() => {
+                firstCard.removeEventListener('click', flipCard);
+                secondCard.removeEventListener('click', flipCard);
+                firstCard.classList.add('matched');
+                secondCard.classList.add('matched');
+                
+                matchedPairs++;
+                currentScoreElement.textContent = matchedPairs;
+                
+                successSound.play();
+                confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+
+                if (matchedPairs === cardData.length / 2) {
+                    clearInterval(timer);
+                    setTimeout(() => alert(`Congratulations! You finished the game in ${seconds} seconds!`), 500);
+                }
+                
+                resetBoard();
+            }, 800);
+        }
+
+        function unflipCards() {
+            lockBoard = true;
+            setTimeout(() => failSound.play(), 500);
+            setTimeout(() => {
+                firstCard.classList.remove('flip');
+                secondCard.classList.remove('flip');
+                resetBoard();
+            }, 2500);
+        }
+        
+        function resetBoard() {
+            [hasFlippedCard, lockBoard] = [false, false];
+            [firstCard, secondCard] = [null, null];
+        }
+
+        function startGame() {
+            matchedPairs = 0;
+            currentScoreElement.textContent = matchedPairs;
+            totalScoreElement.textContent = `/${cardData.length / 2}`;
+            resetBoard();
+            createBoard();
+            startTimer();
+        }
+
+        restartBtn.addEventListener('click', startGame);
+        startGame();
+    </script>
+</body>
+</html>
