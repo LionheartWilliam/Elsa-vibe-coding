@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Let's Make Fruit Salad Game (Touch Enabled)</title>
+    <title>Let's Make Fruit Salad Game (Responsive)</title>
     <style>
         /* General Styles */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0fff0; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0fff0; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
         .game-container { width: 90%; max-width: 800px; background: #fff; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 25px; text-align: center; }
         h1, h2 { color: #2E8B57; }
         p.instructions { color: #555; font-size: 1.1em; }
@@ -24,13 +24,32 @@
         .incorrect { background-color: #f8d7da; border-color: #f5c6cb; }
         /* Touch Dragging Style */
         .dragging-touch { position: absolute; z-index: 1000; pointer-events: none; opacity: 0.8; box-shadow: 0 8px 25px rgba(0,0,0,0.3); transform: scale(1.05); }
-        /* Stage 2 Specific Styles */
-        #stage2 .matching-area { display: flex; flex-direction: column; }
-        #stage2 .columns-wrapper { display: flex; justify-content: space-between; }
-        #stage2 .column { width: 48%; display: flex; flex-direction: column; }
+        
+        /* --- Stage 2 Layout Styles (The Fix is Here) --- */
+        #stage2 .matching-area {
+            display: flex;
+            flex-direction: column; /* Default to vertical for mobile */
+            gap: 20px;
+        }
+        #stage2 .column {
+            width: 100%; /* Default to full width for mobile */
+            display: flex;
+            flex-direction: column;
+        }
         #stage2 .match-pair { display: flex; align-items: center; margin-bottom: 10px; }
         #stage2 .chinese-card { flex: 1; }
         #stage2 .english-dropzone { flex: 1; min-height: 60px; background-color: #f0f0f0; border: 2px dashed #ddd; border-radius: 8px; margin-left: 10px; }
+        
+        /* Media Query for Tablets and wider screens */
+        @media (min-width: 768px) {
+            #stage2 .matching-area {
+                flex-direction: row; /* Change to horizontal layout */
+                justify-content: space-between;
+            }
+            #stage2 .column {
+                width: 48%; /* Set side-by-side width */
+            }
+        }
         /* Utility */
         .hidden { display: none; }
     </style>
@@ -50,7 +69,7 @@
         </div>
         <div id="stage2" class="hidden">
             <h2>Stage 2: Chinese-English Matching</h2>
-            <p class="instructions">Drag the English sentences from the bottom bank to the box next to the matching Chinese meaning.</p>
+            <p class="instructions">Drag the English sentences from the right bank to the box next to the matching Chinese meaning.</p>
             <div class="matching-area">
                 <div id="chinese-container" class="column"></div>
                 <div id="english-container" class="column drop-container"></div>
@@ -88,11 +107,6 @@
         const feedbackStage2 = document.getElementById('feedback-stage2');
 
         function initializeStage2() {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'columns-wrapper';
-            wrapper.appendChild(chineseContainer);
-            document.querySelector('#stage2 .matching-area').prepend(wrapper);
-
             sentencePairs.forEach((pair) => { const pairContainer = document.createElement('div'); pairContainer.className = 'match-pair'; const chineseCard = document.createElement('div'); chineseCard.className = 'card chinese-card'; chineseCard.textContent = pair.ch; const englishDropzone = document.createElement('div'); englishDropzone.className = 'english-dropzone'; englishDropzone.dataset.correctEn = pair.en; pairContainer.appendChild(chineseCard); pairContainer.appendChild(englishDropzone); chineseContainer.appendChild(pairContainer); });
             const shuffledEnglish = shuffleArray([...sentencePairs]);
             shuffledEnglish.forEach((pair) => { const englishCard = document.createElement('div'); englishCard.className = 'card'; englishCard.textContent = pair.en; englishCard.draggable = true; englishContainer.appendChild(englishCard); });
@@ -102,86 +116,24 @@
         // --- Combined Drag and Touch Event Handlers ---
         
         // MOUSE DRAG EVENTS
-        document.addEventListener('dragstart', e => {
-            if (e.target.classList.contains('card') && !e.target.classList.contains('chinese-card')) {
-                draggedItem = e.target;
-                setTimeout(() => e.target.style.opacity = '0.5', 0);
-            }
-        });
-
-        document.addEventListener('dragend', () => {
-            if (draggedItem) {
-                setTimeout(() => { draggedItem.style.opacity = '1'; draggedItem = null; }, 0);
-            }
-        });
+        document.addEventListener('dragstart', e => { if (e.target.classList.contains('card') && !e.target.classList.contains('chinese-card')) { draggedItem = e.target; setTimeout(() => e.target.style.opacity = '0.5', 0); } });
+        document.addEventListener('dragend', () => { if (draggedItem) { setTimeout(() => { draggedItem.style.opacity = '1'; draggedItem = null; }, 0); } });
 
         // TOUCH EVENTS
-        document.addEventListener('touchstart', e => {
-            const target = e.target;
-            if (target.classList.contains('card') && !target.classList.contains('chinese-card')) {
-                touchDraggedItem = target;
-                const rect = target.getBoundingClientRect();
-                offsetX = e.touches[0].clientX - rect.left;
-                offsetY = e.touches[0].clientY - rect.top;
-                
-                touchDraggedItem.classList.add('dragging-touch');
-                touchDraggedItem.style.width = rect.width + 'px';
-                touchDraggedItem.style.height = rect.height + 'px';
-                touchDraggedItem.style.left = (e.touches[0].clientX - offsetX) + 'px';
-                touchDraggedItem.style.top = (e.touches[0].clientY - offsetY) + 'px';
-            }
-        }, { passive: false });
-
-        document.addEventListener('touchmove', e => {
-            if (touchDraggedItem) {
-                e.preventDefault();
-                touchDraggedItem.style.left = (e.touches[0].clientX - offsetX) + 'px';
-                touchDraggedItem.style.top = (e.touches[0].clientY - offsetY) + 'px';
-            }
-        }, { passive: false });
-
-        document.addEventListener('touchend', e => {
-            if (touchDraggedItem) {
-                touchDraggedItem.classList.remove('dragging-touch');
-                touchDraggedItem.style.position = '';
-                touchDraggedItem.style.width = '';
-                touchDraggedItem.style.height = '';
-                touchDraggedItem.style.left = '';
-                touchDraggedItem.style.top = '';
-
-                const touch = e.changedTouches[0];
-                const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
-                
-                handleDrop(touchDraggedItem, dropTarget);
-                touchDraggedItem = null;
-            }
-        });
+        document.addEventListener('touchstart', e => { const target = e.target; if (target.classList.contains('card') && !target.classList.contains('chinese-card')) { touchDraggedItem = target; const rect = target.getBoundingClientRect(); offsetX = e.touches[0].clientX - rect.left; offsetY = e.touches[0].clientY - rect.top; touchDraggedItem.classList.add('dragging-touch'); touchDraggedItem.style.width = rect.width + 'px'; touchDraggedItem.style.height = rect.height + 'px'; touchDraggedItem.style.left = (e.touches[0].clientX - offsetX) + 'px'; touchDraggedItem.style.top = (e.touches[0].clientY - offsetY) + 'px'; } }, { passive: false });
+        document.addEventListener('touchmove', e => { if (touchDraggedItem) { e.preventDefault(); touchDraggedItem.style.left = (e.touches[0].clientX - offsetX) + 'px'; touchDraggedItem.style.top = (e.touches[0].clientY - offsetY) + 'px'; } }, { passive: false });
+        document.addEventListener('touchend', e => { if (touchDraggedItem) { touchDraggedItem.classList.remove('dragging-touch'); touchDraggedItem.style.position = ''; touchDraggedItem.style.width = ''; touchDraggedItem.style.height = ''; touchDraggedItem.style.left = ''; touchDraggedItem.style.top = ''; const touch = e.changedTouches[0]; const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY); handleDrop(touchDraggedItem, dropTarget); touchDraggedItem = null; } });
 
         // COMMON DROP LOGIC
         document.addEventListener('dragover', e => e.preventDefault());
-
-        document.addEventListener('drop', e => {
-            e.preventDefault();
-            if (draggedItem) {
-                handleDrop(draggedItem, e.target);
-            }
-        });
+        document.addEventListener('drop', e => { e.preventDefault(); if (draggedItem) { handleDrop(draggedItem, e.target); } });
         
         function handleDrop(item, dropTarget) {
             if (!item || !dropTarget) return;
-
             let validDropzone = dropTarget.classList.contains('drop-container') ? dropTarget : dropTarget.closest('.drop-container');
-            if (!validDropzone) {
-                 validDropzone = dropTarget.classList.contains('english-dropzone') ? dropTarget : dropTarget.closest('.english-dropzone');
-            }
-
+            if (!validDropzone) { validDropzone = dropTarget.classList.contains('english-dropzone') ? dropTarget : dropTarget.closest('.english-dropzone'); }
             if (validDropzone) {
-                 // Logic for Stage 2 occupied dropzones
-                if (validDropzone.classList.contains('english-dropzone') && validDropzone.children.length > 0) {
-                     const existingCard = validDropzone.firstChild;
-                     const originalBank = document.getElementById('english-container');
-                     if(originalBank) originalBank.appendChild(existingCard);
-                }
+                if (validDropzone.classList.contains('english-dropzone') && validDropzone.children.length > 0) { const existingCard = validDropzone.firstChild; const originalBank = document.getElementById('english-container'); if(originalBank) originalBank.appendChild(existingCard); }
                 validDropzone.appendChild(item);
             }
         }
