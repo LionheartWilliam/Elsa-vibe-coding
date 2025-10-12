@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Let's Make Fruit Salad Game (Responsive)</title>
+    <title>Let's Make Fruit Salad Game (Layout Updated)</title>
     <style>
         /* General Styles */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0fff0; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
@@ -15,7 +15,7 @@
         .btn:hover { background-color: #2E8B57; }
         .btn:disabled { background-color: #cccccc; cursor: not-allowed; }
         /* Game Card & Container Styles */
-        .card { background-color: #f0fff0; border: 2px solid #98FB98; border-radius: 8px; padding: 15px; margin: 8px; cursor: grab; text-align: left; transition: background-color 0.3s, border-color 0.3s; }
+        .card { background-color: #f0fff0; border: 2px solid #98FB98; border-radius: 8px; padding: 15px; margin: 8px; cursor: grab; text-align: left; transition: background-color 0.3s, border-color: 0.3s; }
         .card:active { cursor: grabbing; }
         .drop-container { background-color: #fafafa; border: 2px dashed #ccc; border-radius: 10px; padding: 10px; margin-top: 20px; min-height: 100px; }
         .feedback-area { margin-top: 15px; font-size: 1.2em; font-weight: bold; min-height: 30px; }
@@ -25,30 +25,17 @@
         /* Touch Dragging Style */
         .dragging-touch { position: absolute; z-index: 1000; pointer-events: none; opacity: 0.8; box-shadow: 0 8px 25px rgba(0,0,0,0.3); transform: scale(1.05); }
         
-        /* --- Stage 2 Layout Styles (The Fix is Here) --- */
-        #stage2 .matching-area {
-            display: flex;
-            flex-direction: column; /* Default to vertical for mobile */
-            gap: 20px;
-        }
-        #stage2 .column {
-            width: 100%; /* Default to full width for mobile */
-            display: flex;
-            flex-direction: column;
-        }
+        /* Stage 2 Layout Styles */
+        #stage2 .matching-area { display: flex; flex-direction: column; gap: 20px; }
+        #stage2 .column { width: 100%; display: flex; flex-direction: column; }
         #stage2 .match-pair { display: flex; align-items: center; margin-bottom: 10px; }
-        #stage2 .chinese-card { flex: 1; }
-        #stage2 .english-dropzone { flex: 1; min-height: 60px; background-color: #f0f0f0; border: 2px dashed #ddd; border-radius: 8px; margin-left: 10px; }
+        #stage2 .english-card { flex: 1; cursor: default; } /* English card is now static */
+        #stage2 .chinese-dropzone { flex: 1; min-height: 60px; background-color: #f0f0f0; border: 2px dashed #ddd; border-radius: 8px; margin-left: 10px; }
         
         /* Media Query for Tablets and wider screens */
         @media (min-width: 768px) {
-            #stage2 .matching-area {
-                flex-direction: row; /* Change to horizontal layout */
-                justify-content: space-between;
-            }
-            #stage2 .column {
-                width: 48%; /* Set side-by-side width */
-            }
+            #stage2 .matching-area { flex-direction: row; justify-content: space-between; }
+            #stage2 .column { width: 48%; }
         }
         /* Utility */
         .hidden { display: none; }
@@ -68,11 +55,11 @@
             <button id="next-stage-btn" class="btn hidden">Go to Stage 2</button>
         </div>
         <div id="stage2" class="hidden">
-            <h2>Stage 2: Chinese-English Matching</h2>
-            <p class="instructions">Drag the English sentences from the right bank to the box next to the matching Chinese meaning.</p>
+            <h2>Stage 2: English-Chinese Matching</h2>
+            <p class="instructions">Read the English sentence on the left, then drag the correct Chinese translation from the right bank to the box next to it.</p>
             <div class="matching-area">
-                <div id="chinese-container" class="column"></div>
-                <div id="english-container" class="column drop-container"></div>
+                <div id="english-container" class="column"></div>
+                <div id="chinese-container" class="column drop-container"></div>
             </div>
             <div id="feedback-stage2" class="feedback-area"></div>
             <button id="submit-stage2" class="btn">Submit</button>
@@ -82,7 +69,7 @@
     <script>
         // --- Game Data ---
         const storySentences = [ "Let's make fruit salad.", "Let's wash our hands first.", "How many oranges do we need?", "We need six oranges.", "Save the peel, Jello. We can make orange peel cleaner.", "So many grapes! How many grapes do we need?", "We need a lot.", "I like grapes.", "Boka, are you okay?", "Phew, that was close.", "Be careful next time, Boka." ];
-        const sentencePairs = [ { ch: "我們來做水果沙拉吧。", en: "Let's make fruit salad." }, { ch: "我們先洗手吧。", en: "Let's wash our hands first." }, { ch: "我們需要多少顆柳橙？", en: "How many oranges do we need?" }, { ch: "我們需要六顆柳橙。", en: "We need six oranges." }, { ch: "Jello，把果皮留下來。我們可以製作柳橙皮清潔劑。", en: "Save the peel, Jello. We can make orange peel cleaner." }, { ch: "好多葡萄喔！我們需要多少葡萄？", en: "So many grapes! How many grapes do we need?" }, { ch: "我們需要很多。", en: "We need a lot." }, { ch: "我喜歡葡萄。", en: "I like grapes." }, { ch: "Boka，你還好嗎？", en: "Boka, are you okay?" }, { ch: "呼，好險。", en: "Phew, that was close." }, { ch: "Boka，下次要小心一點。", en: "Be careful next time, Boka." } ];
+        const sentencePairs = [ { ch: "我們來做水果沙拉吧。", en: "Let's make fruit salad." }, { ch: "我們需要多少顆柳橙？", en: "How many oranges do we need?" }, { ch: "我們需要很多。", en: "We need a lot." }, { ch: "Jello，把果皮留下來。我們可以製作柳橙皮清潔劑。", en: "Save the peel, Jello. We can make orange peel cleaner." }, { ch: "呼，好險。", en: "Phew, that was close." }, { ch: "Boka，下次要小心一點。", en: "Be careful next time, Boka." } ];
 
         // --- Generic Game Logic ---
         function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[array[i], array[j]] = [array[j], array[i]]; } return array; }
@@ -98,42 +85,34 @@
             shuffledSentences.forEach((sentence, index) => { const card = document.createElement('div'); card.id = `s1-card-${index}`; card.className = 'card'; card.textContent = sentence; card.draggable = true; sourceContainer.appendChild(card); });
         }
 
-        // --- Submission Logic ---
         submitStage1Btn.addEventListener('click', () => { const userOrderCards = Array.from(targetContainer.children); let allCorrect = userOrderCards.length === storySentences.length; userOrderCards.forEach((card, index) => { card.classList.remove('correct', 'incorrect'); if (storySentences[index] === card.textContent) { card.classList.add('correct'); } else { card.classList.add('incorrect'); allCorrect = false; } }); if (allCorrect) { feedbackStage1.textContent = 'Great! All correct!'; feedbackStage1.style.color = 'green'; nextStageBtn.classList.remove('hidden'); submitStage1Btn.disabled = true; } else { feedbackStage1.textContent = 'Something is not right. Please check the red cards and try again!'; feedbackStage1.style.color = 'red'; } });
         nextStageBtn.addEventListener('click', () => { document.getElementById('stage1').classList.add('hidden'); document.getElementById('stage2').classList.remove('hidden'); initializeStage2(); });
-        const chineseContainer = document.getElementById('chinese-container');
         const englishContainer = document.getElementById('english-container');
+        const chineseContainer = document.getElementById('chinese-container');
         const submitStage2Btn = document.getElementById('submit-stage2');
         const feedbackStage2 = document.getElementById('feedback-stage2');
 
         function initializeStage2() {
-            sentencePairs.forEach((pair) => { const pairContainer = document.createElement('div'); pairContainer.className = 'match-pair'; const chineseCard = document.createElement('div'); chineseCard.className = 'card chinese-card'; chineseCard.textContent = pair.ch; const englishDropzone = document.createElement('div'); englishDropzone.className = 'english-dropzone'; englishDropzone.dataset.correctEn = pair.en; pairContainer.appendChild(chineseCard); pairContainer.appendChild(englishDropzone); chineseContainer.appendChild(pairContainer); });
-            const shuffledEnglish = shuffleArray([...sentencePairs]);
-            shuffledEnglish.forEach((pair) => { const englishCard = document.createElement('div'); englishCard.className = 'card'; englishCard.textContent = pair.en; englishCard.draggable = true; englishContainer.appendChild(englishCard); });
+            sentencePairs.forEach((pair) => { const pairContainer = document.createElement('div'); pairContainer.className = 'match-pair'; const englishCard = document.createElement('div'); englishCard.className = 'card english-card'; englishCard.textContent = pair.en; const chineseDropzone = document.createElement('div'); chineseDropzone.className = 'chinese-dropzone'; chineseDropzone.dataset.correctCh = pair.ch; pairContainer.appendChild(englishCard); pairContainer.appendChild(chineseDropzone); englishContainer.appendChild(pairContainer); });
+            const shuffledChinese = shuffleArray([...sentencePairs]);
+            shuffledChinese.forEach((pair) => { const chineseCard = document.createElement('div'); chineseCard.className = 'card'; chineseCard.textContent = pair.ch; chineseCard.draggable = true; chineseContainer.appendChild(chineseCard); });
         }
-        submitStage2Btn.addEventListener('click', () => { const pairs = chineseContainer.querySelectorAll('.match-pair'); let allCorrect = true; pairs.forEach(pair => { const dropzone = pair.querySelector('.english-dropzone'); const droppedCard = dropzone.querySelector('.card'); pair.classList.remove('correct', 'incorrect'); if (droppedCard && dropzone.dataset.correctEn === droppedCard.textContent) { pair.classList.add('correct'); } else { pair.classList.add('incorrect'); allCorrect = false; } }); if (allCorrect) { feedbackStage2.textContent = 'Congratulations, you have completed the game!'; feedbackStage2.style.color = 'green'; submitStage2Btn.disabled = true; } else { feedbackStage2.textContent = 'Some pairs are incorrect. Please try again!'; feedbackStage2.style.color = 'red'; } });
+        submitStage2Btn.addEventListener('click', () => { const pairs = englishContainer.querySelectorAll('.match-pair'); let allCorrect = true; pairs.forEach(pair => { const dropzone = pair.querySelector('.chinese-dropzone'); const droppedCard = dropzone.querySelector('.card'); pair.classList.remove('correct', 'incorrect'); if (droppedCard && dropzone.dataset.correctCh === droppedCard.textContent) { pair.classList.add('correct'); } else { pair.classList.add('incorrect'); allCorrect = false; } }); if (allCorrect) { feedbackStage2.textContent = 'Congratulations, you have completed the game!'; feedbackStage2.style.color = 'green'; submitStage2Btn.disabled = true; } else { feedbackStage2.textContent = 'Some pairs are incorrect. Please try again!'; feedbackStage2.style.color = 'red'; } });
 
         // --- Combined Drag and Touch Event Handlers ---
-        
-        // MOUSE DRAG EVENTS
-        document.addEventListener('dragstart', e => { if (e.target.classList.contains('card') && !e.target.classList.contains('chinese-card')) { draggedItem = e.target; setTimeout(() => e.target.style.opacity = '0.5', 0); } });
+        document.addEventListener('dragstart', e => { if (e.target.classList.contains('card') && !e.target.classList.contains('english-card')) { draggedItem = e.target; setTimeout(() => e.target.style.opacity = '0.5', 0); } });
         document.addEventListener('dragend', () => { if (draggedItem) { setTimeout(() => { draggedItem.style.opacity = '1'; draggedItem = null; }, 0); } });
-
-        // TOUCH EVENTS
-        document.addEventListener('touchstart', e => { const target = e.target; if (target.classList.contains('card') && !target.classList.contains('chinese-card')) { touchDraggedItem = target; const rect = target.getBoundingClientRect(); offsetX = e.touches[0].clientX - rect.left; offsetY = e.touches[0].clientY - rect.top; touchDraggedItem.classList.add('dragging-touch'); touchDraggedItem.style.width = rect.width + 'px'; touchDraggedItem.style.height = rect.height + 'px'; touchDraggedItem.style.left = (e.touches[0].clientX - offsetX) + 'px'; touchDraggedItem.style.top = (e.touches[0].clientY - offsetY) + 'px'; } }, { passive: false });
+        document.addEventListener('touchstart', e => { const target = e.target; if (target.classList.contains('card') && !target.classList.contains('english-card')) { touchDraggedItem = target; const rect = target.getBoundingClientRect(); offsetX = e.touches[0].clientX - rect.left; offsetY = e.touches[0].clientY - rect.top; touchDraggedItem.classList.add('dragging-touch'); touchDraggedItem.style.width = rect.width + 'px'; touchDraggedItem.style.height = rect.height + 'px'; touchDraggedItem.style.left = (e.touches[0].clientX - offsetX) + 'px'; touchDraggedItem.style.top = (e.touches[0].clientY - offsetY) + 'px'; } }, { passive: false });
         document.addEventListener('touchmove', e => { if (touchDraggedItem) { e.preventDefault(); touchDraggedItem.style.left = (e.touches[0].clientX - offsetX) + 'px'; touchDraggedItem.style.top = (e.touches[0].clientY - offsetY) + 'px'; } }, { passive: false });
         document.addEventListener('touchend', e => { if (touchDraggedItem) { touchDraggedItem.classList.remove('dragging-touch'); touchDraggedItem.style.position = ''; touchDraggedItem.style.width = ''; touchDraggedItem.style.height = ''; touchDraggedItem.style.left = ''; touchDraggedItem.style.top = ''; const touch = e.changedTouches[0]; const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY); handleDrop(touchDraggedItem, dropTarget); touchDraggedItem = null; } });
-
-        // COMMON DROP LOGIC
         document.addEventListener('dragover', e => e.preventDefault());
         document.addEventListener('drop', e => { e.preventDefault(); if (draggedItem) { handleDrop(draggedItem, e.target); } });
-        
         function handleDrop(item, dropTarget) {
             if (!item || !dropTarget) return;
             let validDropzone = dropTarget.classList.contains('drop-container') ? dropTarget : dropTarget.closest('.drop-container');
-            if (!validDropzone) { validDropzone = dropTarget.classList.contains('english-dropzone') ? dropTarget : dropTarget.closest('.english-dropzone'); }
+            if (!validDropzone) { validDropzone = dropTarget.classList.contains('chinese-dropzone') ? dropTarget : dropTarget.closest('.chinese-dropzone'); }
             if (validDropzone) {
-                if (validDropzone.classList.contains('english-dropzone') && validDropzone.children.length > 0) { const existingCard = validDropzone.firstChild; const originalBank = document.getElementById('english-container'); if(originalBank) originalBank.appendChild(existingCard); }
+                if (validDropzone.classList.contains('chinese-dropzone') && validDropzone.children.length > 0) { const existingCard = validDropzone.firstChild; const originalBank = document.getElementById('chinese-container'); if(originalBank) originalBank.appendChild(existingCard); }
                 validDropzone.appendChild(item);
             }
         }
